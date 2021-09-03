@@ -381,6 +381,9 @@ end)
 
 -- Main thread
 Citizen.CreateThread(function()
+    local bestLapTime = 0
+    local currentLap = 1
+    local lastLapStart = 0
     -- Loop forever and update every frame
     while true do
         Citizen.Wait(0)
@@ -469,6 +472,9 @@ Citizen.CreateThread(function()
                         -- Send finish event to server
                         local currentTime = (GetGameTimer() - race.startTime)
                         TriggerServerEvent('mrp_races:finishedRace_sv', raceStatus.index, currentTime, raceStatus.checkpoint + 1, raceStatus.totalDistance)
+                        bestLapTime = 0
+                        currentLap = 1
+                        lastLapStart = 0
                         
                         -- Reset state
                         raceStatus.finished = true
@@ -492,6 +498,9 @@ Citizen.CreateThread(function()
                                 -- Send finish event to server
                                 local currentTime = (GetGameTimer() - race.startTime)
                                 TriggerServerEvent('mrp_races:finishedRace_sv', raceStatus.index, currentTime, raceStatus.checkpoint + 1, raceStatus.totalDistance)
+                                bestLapTime = 0
+                                currentLap = 1
+                                lastLapStart = 0
                                 
                                 -- Reset state
                                 raceStatus.finished = true
@@ -585,7 +594,31 @@ Citizen.CreateThread(function()
                 DrawRaceText(config_cl.hudPosition.x, config_cl.hudPosition.y, ("%d/%d"):format(raceStatus.position, raceStatus.totalPlayers), 0.5, 5, true, width - 0.006)
                 DrawRaceText(config_cl.hudPosition.x, config_cl.hudPosition.y + 0.008, "POSITION", 0.3, 0, false)
                 
-                -- Draw Current Race Time
+                local lap = math.floor((raceStatus.checkpoint - 1) / #race.originalCheckpoints) + 1
+                
+                if lastLapStart == 0 then
+                    lastLapStart = GetGameTimer()
+                end
+                -- currentLapTime
+                local lapTimeSeconds = (GetGameTimer() -lastLapStart)/1000.0
+                
+                -- new lap
+                if lap ~= currentLap then
+                    currentLap = lap
+                    lastLapStart = GetGameTimer()
+                    if bestLapTime == 0 or lapTimeSeconds < bestLapTime then
+                        -- new best lap
+                        bestLapTime = lapTimeSeconds
+                    end
+                end
+                
+                local bestLapMinutes = math.floor(bestLapTime/60.0)
+                local bestLapSeconds = bestLapTime - 60.0*bestLapMinutes
+                
+                DrawRect(config_cl.hudPosition.x + (width / 2) - 0.002, config_cl.hudPosition.y - 0.042 + (height / 2), width, height, 20, 20, 20, 160)
+                DrawRaceText(config_cl.hudPosition.x, config_cl.hudPosition.y - 0.042, ("%02d:%05.2f"):format(bestLapMinutes, bestLapSeconds), 0.5, 5, true, width - 0.006)
+                DrawRaceText(config_cl.hudPosition.x, config_cl.hudPosition.y - 0.034, "BEST LAP", 0.3, 0, false)
+                
                 local timeSeconds = (GetGameTimer() - race.startTime)/1000.0
                 local timeMinutes = math.floor(timeSeconds/60.0)
                 timeSeconds = timeSeconds - 60.0*timeMinutes
@@ -599,7 +632,7 @@ Citizen.CreateThread(function()
                 local checkpointDist = math.floor(GetDistanceBetweenCoords(position.x, position.y, position.z, checkpoint.coords.x, checkpoint.coords.y, checkpoint.coords.z, true))
                 
                 DrawRect(config_cl.hudPosition.x - 0.11 + (widthShort / 2) - 0.002, config_cl.hudPosition.y + 0.042 + (height / 2), widthShort, height, 20, 20, 20, 160)
-                DrawRaceText(config_cl.hudPosition.x - 0.11, config_cl.hudPosition.y + 0.042, ("%d/%d"):format(math.floor((raceStatus.checkpoint - 1) / #race.originalCheckpoints) + 1, raceStatus.laps), 0.5, 5, true, widthShort - 0.006)
+                DrawRaceText(config_cl.hudPosition.x - 0.11, config_cl.hudPosition.y + 0.042, ("%d/%d"):format(lap, raceStatus.laps), 0.5, 5, true, widthShort - 0.006)
                 DrawRaceText(config_cl.hudPosition.x - 0.11, config_cl.hudPosition.y + 0.050, "LAP", 0.3, 0, false)
                 
                 -- Draw DNF Timer
@@ -1278,8 +1311,8 @@ Citizen.CreateThread(function()
     while true do
         Citizen.Wait(0)
         
-        -- Check DPAD_DOWN Pressed and Race Status is RACING or SPECTATING
-        if (IsControlJustReleased(0, 20)) and (raceStatus.state == RACE_STATE_RACING or raceStatus.state == RACE_STATE_SPECTATING) then
+        -- Check X on controller or spacebar on keyboard Pressed and Race Status is RACING or SPECTATING
+        if (IsControlJustReleased(0, 22)) and (raceStatus.state == RACE_STATE_RACING or raceStatus.state == RACE_STATE_SPECTATING) then
             local pressedAgain = false
             local timer = GetGameTimer()
 
