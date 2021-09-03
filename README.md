@@ -1,11 +1,11 @@
-# FiveM StreetRaces
+# FiveM mrp_races
 
 FiveM resource for street races with custom checkpoints and HUD.
 
 ## Installation
 
-1. Add the StreetRaces folder to your FiveM resources directory
-2. Edit your server.cfg and add "start StreetRaces"
+1. Add the mrp_races folder to your FiveM resources directory
+2. Edit your server.cfg and add "start mrp_races"
 
 commands:
 /race start amount [delay] - Start a race for money using waypoint or recorded checkpoints
@@ -16,7 +16,8 @@ Optional argument for delay before race starts (default 30s)
 Set waypoints on the map to create checkpoints (snaps to nearest vehicle path node)
 Double click existing checkpoints to remove
 /race clear - Clear recorded checkpoints
-/race save name - Save recorded checkpoints with name
+/race save name - Save recorded checkpoints with name as a sprint race
+/race save name numberOfLaps - Save recorded checkpoints with name as a race with laps
 /race load name - Load recorded checkpoints with name
 /race delete name - Delete recorded checkpoints with name
 /race list - List saved checkpoints by name
