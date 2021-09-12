@@ -654,6 +654,9 @@ Citizen.CreateThread(function()
         -- Player has joined a race
         elseif raceStatus.state == RACE_STATE_JOINED then
             -- Check countdown to race start
+            bestLapTime = 0
+            currentLap = 1
+            lastLapStart = 0
             local race = races[raceStatus.index]
             local currentTime = GetGameTimer()
             local count = race.startTime - currentTime
